@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
-from typing import Optional
+
 
 class Settings(BaseSettings):
     """
@@ -30,14 +30,18 @@ class Settings(BaseSettings):
         "https://www.googleapis.com/auth/userinfo.profile"
     ]
     
-    # ==================== JWT (Ed25519) ====================
-    JWT_ALGORITHM: str = "EdDSA"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
-    
-    # Rutas a las llaves (Defaults para local, override en producción via .env)
-    PRIVATE_KEY_PATH: str = "keys/ed25519_private.pem"
-    PUBLIC_KEY_PATH: str = "keys/ed25519_public.pem"
+    # ==================== JWT (Standard) ====================
+    SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
+
+    # Legacy/Advanced (Ed25519) - kept for future reference
+    # JWT_ALGORITHM: str = "EdDSA"
+    # JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    # JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    # PRIVATE_KEY_PATH: str = "keys/ed25519_private.pem"
+    # PUBLIC_KEY_PATH: str = "keys/ed25519_public.pem"
     
     # ==================== APP ====================
     

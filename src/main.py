@@ -22,6 +22,9 @@ app.add_middleware(
 )
 
 # Rutas básicas
+from presentation.api.v1.endpoints import auth
+app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+
 @app.get("/health", tags=["System"])
 def health_check():
     return {"status": "ok", "env": settings.APP_ENV}

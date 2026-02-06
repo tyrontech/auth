@@ -1,6 +1,17 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Dict
 from typing import Dict
 from domain.entities.user import User
+
+@dataclass
+class ProviderUser:
+    provider_id: str
+    email: str
+    name: str = ""
+    picture: str = None
+    email_verified: bool = False
+    extra_data: dict = None
 
 class IOAuthProvider(ABC):
     @abstractmethod
@@ -12,5 +23,5 @@ class IOAuthProvider(ABC):
         pass
 
     @abstractmethod
-    def get_user_info(self, access_token: str) -> User:
+    def get_user_info(self, access_token: str) -> ProviderUser:
         pass

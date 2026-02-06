@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 from uuid import UUID
-from identity.entities.oauth_connection import OAuthConnection, OAuthProvider
+from domain.entities.oauth_connection import OAuthConnection, OAuthProvider
 
 
 class OAuthConnectionRepository(ABC):

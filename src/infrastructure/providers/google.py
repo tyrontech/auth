@@ -1,18 +1,12 @@
-from datetime import datetime
-from uuid import uuid4
 from google_auth_oauthlib.flow import Flow
-from google.auth.transport import requests
-from google.oauth2 import id_token
 from config.settings import get_settings
-from domain.ports.oauth_provider import IOAuthProvider
-from domain.entities.user import User
+from domain.ports.oauth_provider import IOAuthProvider, ProviderUser
 
 class GoogleOAuthProvider(IOAuthProvider):
-    def __init__(self):
-        settings = get_settings()
-        self.client_id = settings.GOOGLE_CLIENT_ID
-        self.client_secret = settings.GOOGLE_CLIENT_SECRET
-        self.scopes = settings.GOOGLE_SCOPES
+    def __init__(self, client_id: str, client_secret: str, scopes: list[str]):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.scopes = scopes
     
     def get_authorization_url(self, redirect_uri: str, state: str) -> str:
         flow = Flow.from_client_config(
@@ -57,7 +51,7 @@ class GoogleOAuthProvider(IOAuthProvider):
             "id_token": flow.credentials.id_token
         }
     
-    def get_user_info(self, access_token: str) -> User:
+    def get_user_info(self, access_token: str) -> ProviderUser:
         import requests as http_requests
         
         response = http_requests.get(
@@ -66,15 +60,13 @@ class GoogleOAuthProvider(IOAuthProvider):
         )
         
         data = response.json()
-        now = datetime.utcnow()
         
-        # Mapeamos a la Entidad de Dominio real (User)
-        return User(
-            id=uuid4(), # ID temporal, el caso de uso decidirá si busca uno existente o usa este
+        return ProviderUser(
+            provider_id=data.get("id"),  # Google v2 userinfo uses 'id'
             email=data["email"],
             name=data.get("name", ""),
             picture=data.get("picture"),
-            created_at=now,
-            updated_at=now
+            email_verified=data.get("verified_email", False),
+            extra_data=data
         )
     
