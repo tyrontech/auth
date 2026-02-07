@@ -1,5 +1,5 @@
 from google_auth_oauthlib.flow import Flow
-from config.settings import get_settings
+
 from domain.ports.oauth_provider import IOAuthProvider, ProviderUser
 
 class GoogleOAuthProvider(IOAuthProvider):

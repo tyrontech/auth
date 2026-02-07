@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 from uuid import UUID
 from jose import jwt
-from config.settings import get_settings
+
 from domain.ports.token_service import ITokenService
 
 class JWTTokenService(ITokenService):

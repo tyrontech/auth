@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from infrastructure.database.session import get_db
 
-from infrastructure.database.session import get_db
+
 from infrastructure.repositories.sqlalchemy_user_repository import SQLAlchemyUserRepository
 from infrastructure.repositories.sqlalchemy_oauth_connection_repository import SQLAlchemyOAuthConnectionRepository
 from infrastructure.services.jwt_service import JWTTokenService
@@ -12,10 +12,9 @@ from domain.ports.token_service import ITokenService
 from domain.ports.oauth_provider import IOAuthProvider
 from domain.ports.user_repository import UserRepository
 from domain.ports.oauth_connection_repository import OAuthConnectionRepository
-from config.settings import get_settings
+from config.settings import get_settings, Settings
 
-def get_token_service() -> ITokenService:
-    settings = get_settings()
+def get_token_service(settings: Settings = Depends(get_settings)) -> ITokenService:
     return JWTTokenService(
         secret_key=settings.SECRET_KEY,
         algorithm=settings.ALGORITHM,
@@ -23,8 +22,7 @@ def get_token_service() -> ITokenService:
         refresh_expire_minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES
     )
 
-def get_oauth_provider() -> IOAuthProvider:
-    settings = get_settings()
+def get_oauth_provider(settings: Settings = Depends(get_settings)) -> IOAuthProvider:
     return GoogleOAuthProvider(
         client_id=settings.GOOGLE_CLIENT_ID,
         client_secret=settings.GOOGLE_CLIENT_SECRET,
