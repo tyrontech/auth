@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from uuid import UUID
-from identity.entities.user_credentials import UserCredentials
+
+from domain.entities.user_credentials import UserCredentials
 
 
 class UserCredentialsRepository(ABC):
-
     @abstractmethod
     async def find_by_user_id(self, user_id: UUID) -> Optional[UserCredentials]:
         pass

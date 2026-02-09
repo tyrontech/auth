@@ -1,17 +1,17 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict
-from typing import Dict
-from domain.entities.user import User
+from typing import Any
+
 
 @dataclass
 class ProviderUser:
     provider_id: str
     email: str
     name: str = ""
-    picture: str = None
+    picture: str | None = None
     email_verified: bool = False
-    extra_data: dict = None
+    extra_data: dict[str, Any] | None = None
+
 
 class IOAuthProvider(ABC):
     @abstractmethod
@@ -19,9 +19,11 @@ class IOAuthProvider(ABC):
         pass
 
     @abstractmethod
-    def exchange_code_for_token(self, code: str, redirect_uri: str) -> Dict:
+    def exchange_code_for_token(
+        self, code: str, redirect_uri: str
+    ) -> dict[str, Any]:
         pass
 
     @abstractmethod
-    def get_user_info(self, access_token: str) -> ProviderUser:
+    async def get_user_info(self, access_token: str) -> ProviderUser:
         pass

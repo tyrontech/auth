@@ -1,29 +1,39 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from config.settings import get_database_url
-
-DATABASE_URL = get_database_url()
-
-# Create Async Engine
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=True, # Set to False in production
-    future=True
+"""
+Fábrica del motor y sesiones asíncronas para SQLAlchemy.
+Sin dependencias de config: recibe URL y opciones por parámetro.
+La composición con config se hace en el composition root (deps).
+"""
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
 )
 
-# Create Async Session Factory
-AsyncSessionLocal = sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False
-)
 
-async def get_db() -> AsyncSession:
+def create_async_engine_and_session_factory(
+    url: str,
+    *,
+    echo: bool = False,
+    pool_size: int = 20,
+    max_overflow: int = 0,
+) -> tuple[AsyncEngine, async_sessionmaker[AsyncSession]]:
     """
-    Dependency generator for FastAPI to yield Database Sessions.
+    Crea motor asíncrono y fábrica de sesiones. Infra no conoce config.
     """
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+    engine = create_async_engine(
+        url,
+        echo=echo,
+        future=True,
+        pool_size=pool_size,
+        max_overflow=max_overflow,
+    )
+    session_factory = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autoflush=True,
+    )
+    return engine, session_factory
+
+

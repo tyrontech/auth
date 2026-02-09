@@ -3,9 +3,10 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from domain.ports.oauth_connection_repository import OAuthConnectionRepository
 from domain.entities.oauth_connection import OAuthConnection, OAuthProvider
+from domain.ports.oauth_connection_repository import OAuthConnectionRepository
 from infrastructure.database.models.oauth_connection import OAuthConnectionModel
+
 
 class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
     def __init__(self, session: AsyncSession):
@@ -18,7 +19,7 @@ class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
     ) -> Optional[OAuthConnection]:
         stmt = select(OAuthConnectionModel).where(
             OAuthConnectionModel.user_id == user_id,
-            OAuthConnectionModel.provider == provider.value
+            OAuthConnectionModel.provider == provider,
         )
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -30,8 +31,8 @@ class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
         provider_user_id: str
     ) -> Optional[OAuthConnection]:
         stmt = select(OAuthConnectionModel).where(
-            OAuthConnectionModel.provider == provider.value,
-            OAuthConnectionModel.provider_user_id == provider_user_id
+            OAuthConnectionModel.provider == provider,
+            OAuthConnectionModel.provider_user_id == provider_user_id,
         )
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -48,12 +49,11 @@ class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
 
     async def save(self, connection: OAuthConnection) -> OAuthConnection:
         model = await self._find_model(connection.id)
-        
         if not model:
             model = OAuthConnectionModel(
                 id=connection.id,
                 user_id=connection.user_id,
-                provider=connection.provider.value,
+                provider=connection.provider,
                 provider_user_id=connection.provider_user_id,
                 provider_email=connection.provider_email,
                 access_token_hash=connection.access_token_hash,
@@ -69,7 +69,6 @@ class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
             model.access_token_hash = connection.access_token_hash
             model.refresh_token_hash = connection.refresh_token_hash
             model.token_expires_at = connection.token_expires_at
-            
         await self.session.commit()
         await self.session.refresh(model)
         return self._to_entity(model)
@@ -87,10 +86,15 @@ class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
         return result.scalar_one_or_none()
 
     def _to_entity(self, model: OAuthConnectionModel) -> OAuthConnection:
+        provider = (
+            model.provider
+            if isinstance(model.provider, OAuthProvider)
+            else OAuthProvider(model.provider)
+        )
         return OAuthConnection(
             id=model.id,
             user_id=model.user_id,
-            provider=OAuthProvider(model.provider),
+            provider=provider,
             provider_user_id=model.provider_user_id,
             provider_email=model.provider_email,
             access_token_hash=model.access_token_hash,

@@ -1,4 +1,5 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 from functools import lru_cache
 
 
@@ -9,10 +10,10 @@ class Settings(BaseSettings):
     """
     
     # ==================== DATABASE ====================
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 3306
-    DB_USER: str = "root"
-    DB_PASSWORD: str
+    DB_HOST: str = "db"
+    DB_PORT: int = 5432
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str | None = None
     DB_NAME: str = "auth_db"
     
     # Pool de conexiones
@@ -20,10 +21,9 @@ class Settings(BaseSettings):
     DB_POOL_MAX_SIZE: int = 20
     
     # ==================== GOOGLE OAUTH ====================
-    GOOGLE_CLIENT_ID: str
-    GOOGLE_CLIENT_SECRET: str
-    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/auth/callback"
-    
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/callback/google"
     GOOGLE_SCOPES: list[str] = [
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",
@@ -34,16 +34,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
-
-    # Legacy/Advanced (Ed25519) - kept for future reference
-    # JWT_ALGORITHM: str = "EdDSA"
-    # JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    # JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
-    # PRIVATE_KEY_PATH: str = "keys/ed25519_private.pem"
-    # PUBLIC_KEY_PATH: str = "keys/ed25519_public.pem"
-    
-    # ==================== APP ====================
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
     # ==================== APP ====================
     APP_NAME: str = "Auth Service"
@@ -53,10 +44,25 @@ class Settings(BaseSettings):
     # ==================== SEGURIDAD ====================
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    # ==================== VALIDACIONES ====================
+    @field_validator("DB_PASSWORD", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET")
+    @classmethod
+    def check_required_fields(cls, v: str | None, info) -> str:
+        """Valida que los campos críticos estén configurados"""
+        if v is None or v == "":
+            raise ValueError(
+                f"❌ {info.field_name} es requerido. "
+                f"Agrégalo al archivo .env"
+            )
+        return v
+    
+    # ==================== CONFIGURACIÓN PYDANTIC ====================
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",  # Ignora variables extra en .env
+    )
 
 
 # ==================== SINGLETON ====================
