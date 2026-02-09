@@ -7,4 +7,5 @@ __pycache__/
 *.pyo
 *.pydS
 
-keys
+# JWT keys (Ed25519)
+keys/
