@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
 from application.dtos.auth_response import AuthResponse
+from application.dtos.refresh_request import RefreshRequest
+from application.exceptions import InvalidRefreshTokenError
 from application.use_cases.authenticate_with_google import AuthenticateWithGoogle
+from application.use_cases.refresh_tokens import RefreshTokens
 from presentation.api import deps
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -32,3 +35,15 @@ async def callback_google(
     """Recibe el callback de Google, crea/loguea usuario y devuelve tokens."""
     auth_response = await use_case.execute(code=code, redirect_uri=redirect_uri)
     return auth_response
+
+
+@router.post("/refresh", response_model=AuthResponse)
+async def refresh_tokens(
+    body: RefreshRequest,
+    use_case: RefreshTokens = Depends(deps.get_refresh_tokens_use_case),
+):
+    """Intercambia un refresh token válido por nuevos access y refresh tokens (rotation)."""
+    try:
+        return await use_case.execute(refresh_token=body.refresh_token)
+    except InvalidRefreshTokenError as e:
+        raise HTTPException(status_code=401, detail=str(e))

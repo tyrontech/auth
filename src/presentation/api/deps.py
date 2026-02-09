@@ -29,6 +29,7 @@ from infrastructure.repositories.sqlalchemy_user_repository import (
     SQLAlchemyUserRepository,
 )
 from application.use_cases.authenticate_with_google import AuthenticateWithGoogle
+from application.use_cases.refresh_tokens import RefreshTokens
 
 
 def get_google_redirect_uri(
@@ -116,4 +117,18 @@ def get_authenticate_google_use_case(
         oauth_connection_repository=oauth_repository,
         token_service=token_service,
         refresh_token_repository=refresh_token_repository,
+    )
+
+
+def get_refresh_tokens_use_case(
+    token_service: ITokenService = Depends(get_token_service),
+    refresh_token_repository: RefreshTokenRepository = Depends(
+        get_refresh_token_repository
+    ),
+    user_repository: UserRepository = Depends(get_user_repository),
+) -> RefreshTokens:
+    return RefreshTokens(
+        token_service=token_service,
+        refresh_token_repository=refresh_token_repository,
+        user_repository=user_repository,
     )

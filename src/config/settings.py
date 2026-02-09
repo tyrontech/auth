@@ -1,5 +1,7 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from functools import lru_cache
 
 
@@ -44,7 +46,11 @@ class Settings(BaseSettings):
     
     # ==================== SEGURIDAD ====================
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
-    
+
+    # ==================== STATE STORE (OAuth CSRF) ====================
+    STATE_STORE_BACKEND: Literal["memory", "redis"] = "memory"
+    REDIS_URL: str | None = None  # Required when STATE_STORE_BACKEND=redis
+
     # ==================== VALIDACIONES ====================
     @field_validator("DB_PASSWORD", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET")
     @classmethod
@@ -56,7 +62,16 @@ class Settings(BaseSettings):
                 f"Agrégalo al archivo .env"
             )
         return v
-    
+
+    @model_validator(mode="after")
+    def check_redis_url_when_redis_backend(self) -> "Settings":
+        if self.STATE_STORE_BACKEND == "redis" and not self.REDIS_URL:
+            raise ValueError(
+                "REDIS_URL is required when STATE_STORE_BACKEND=redis. "
+                "Set REDIS_URL in .env or use STATE_STORE_BACKEND=memory."
+            )
+        return self
+
     # ==================== CONFIGURACIÓN PYDANTIC ====================
     model_config = SettingsConfigDict(
         env_file=".env",

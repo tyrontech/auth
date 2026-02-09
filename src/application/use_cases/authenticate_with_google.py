@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -28,7 +29,9 @@ class AuthenticateWithGoogle:
         self.refresh_token_repository = refresh_token_repository
 
     async def execute(self, code: str, redirect_uri: str) -> AuthResponse:
-        tokens = self.oauth_provider.exchange_code_for_token(code, redirect_uri)
+        tokens = await asyncio.to_thread(
+            self.oauth_provider.exchange_code_for_token, code, redirect_uri
+        )
         google_access_token = tokens["access_token"]
 
         provider_user = await self.oauth_provider.get_user_info(google_access_token)
