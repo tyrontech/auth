@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/callback/google"
+    OAUTH_STATE_TTL_SECONDS: int = 600
     GOOGLE_SCOPES: list[str] = [
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",

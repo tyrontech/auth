@@ -13,3 +13,8 @@ class IStateStore(ABC):
     def consume(self, state: str) -> bool:
         """Devuelve True si el state existía y lo elimina; False si no existe o ya expiró."""
         pass
+
+    @abstractmethod
+    def generate_and_store(self, ttl_seconds: int = 600) -> str:
+        """Genera un state seguro, lo guarda con TTL y lo devuelve."""
+        pass

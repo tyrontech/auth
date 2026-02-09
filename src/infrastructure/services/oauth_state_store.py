@@ -2,6 +2,7 @@
 Servicio de almacén temporal para state OAuth (protección CSRF).
 Implementación en memoria; en producción podría ser Redis u otro cache.
 """
+import secrets
 from datetime import datetime, timezone
 from threading import Lock
 
@@ -28,6 +29,11 @@ class InMemoryStateStore(IStateStore):
                 return False
             del self._store[state]
             return True
+
+    def generate_and_store(self, ttl_seconds: int = 600) -> str:
+        state = secrets.token_urlsafe(32)
+        self.set(state, ttl_seconds=ttl_seconds)
+        return state
 
     def _prune_locked(self) -> None:
         now = datetime.now(timezone.utc)
