@@ -4,7 +4,7 @@ Main llama init() al arranque; deps importa los getters desde aquí.
 Singletons (token, oauth, state_store) se crean aquí; get_db por request.
 Para tests: init(container=mi_container) con un container que tenga mocks.
 """
-from typing import Protocol
+from typing import Any, Protocol
 
 from config.settings import get_database_url, get_settings
 from infrastructure.database.session import create_db_provider
@@ -20,7 +20,8 @@ from domain.ports.oauth_provider import IOAuthProvider
 class AppContainer(Protocol):
     """Protocol for the app container. Tests can provide a substitute."""
 
-    def get_db(self):
+    def get_db(self) -> Any:
+        """Returns the async generator function for session per request."""
         ...
 
     def get_state_store(self) -> IStateStore:
@@ -49,7 +50,8 @@ class _DefaultContainer:
         self._oauth_provider = oauth_provider
 
     def get_db(self):
-        return self._db_provider()
+        """Returns the async generator function (FastAPI will call it and iterate)."""
+        return self._db_provider
 
     def get_state_store(self) -> IStateStore:
         return self._state_store
@@ -111,7 +113,10 @@ def _create_state_store(settings):
     from infrastructure.services.redis_state_store import RedisStateStore
 
     if settings.STATE_STORE_BACKEND == "redis" and settings.REDIS_URL:
-        return RedisStateStore(redis_url=settings.REDIS_URL)
+        return RedisStateStore(
+            redis_url=settings.REDIS_URL,
+            key_prefix=settings.REDIS_KEY_PREFIX,
+        )
     return InMemoryStateStore()
 
 
@@ -123,9 +128,19 @@ def _get_container() -> AppContainer:
     return _container
 
 
-def get_db():
-    """Session provider per request. Raises if bootstrap not initialized."""
-    return _get_container().get_db()
+async def get_db():
+    """
+    Async generator: yield session per request. FastAPI Depends(get_db) injects the session.
+    Must be an async generator so FastAPI iterates it; a sync function returning the generator
+    would inject the generator object instead of the session.
+    """
+    container = _get_container()
+    inner_gen = container.get_db()()
+    try:
+        session = await inner_gen.__anext__()
+        yield session
+    finally:
+        await inner_gen.aclose()
 
 
 def get_state_store() -> IStateStore:

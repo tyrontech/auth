@@ -42,7 +42,17 @@ class Settings(BaseSettings):
     # ==================== APP ====================
     APP_NAME: str = "Auth Service"
     APP_ENV: str = "development"  # development, staging, production
-    DEBUG: bool = True
+    DEBUG: bool = True  # Controla docs, CORS detalle y reload de uvicorn
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def parse_debug(cls, v: str | bool) -> bool:
+        """Acepta DEBUG=true/false/1/0 desde .env (siempre bool)."""
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            return v.strip().lower() in ("true", "1", "yes")
+        return bool(v)
     
     # ==================== SEGURIDAD ====================
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
@@ -50,6 +60,7 @@ class Settings(BaseSettings):
     # ==================== STATE STORE (OAuth CSRF) ====================
     STATE_STORE_BACKEND: Literal["memory", "redis"] = "memory"
     REDIS_URL: str | None = None  # Required when STATE_STORE_BACKEND=redis
+    REDIS_KEY_PREFIX: str = "auth:oauth:state:"  # Prefix for state keys in Redis
 
     # ==================== VALIDACIONES ====================
     @field_validator("DB_PASSWORD", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET")

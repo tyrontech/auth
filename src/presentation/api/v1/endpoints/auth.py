@@ -8,7 +8,7 @@ from application.use_cases.authenticate_with_google import AuthenticateWithGoogl
 from application.use_cases.refresh_tokens import RefreshTokens
 from presentation.api import deps
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 
 @router.get("/login/google")

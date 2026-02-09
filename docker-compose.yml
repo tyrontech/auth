@@ -47,8 +47,6 @@ services:
       - .env
     environment:
       - DB_HOST=db
-      - STATE_STORE_BACKEND=redis
-      - REDIS_URL=redis://redis:6379/0
 
 volumes:
   postgres_data:

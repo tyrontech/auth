@@ -5,7 +5,10 @@ from sqlalchemy.future import select
 
 from domain.entities.oauth_connection import OAuthConnection, OAuthProvider
 from domain.ports.oauth_connection_repository import OAuthConnectionRepository
-from infrastructure.database.models.oauth_connection import OAuthConnectionModel
+from infrastructure.database.models.oauth_connection import (
+    OAuthConnectionModel,
+    provider_to_db_value,
+)
 
 
 class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
@@ -19,7 +22,7 @@ class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
     ) -> Optional[OAuthConnection]:
         stmt = select(OAuthConnectionModel).where(
             OAuthConnectionModel.user_id == user_id,
-            OAuthConnectionModel.provider == provider,
+            OAuthConnectionModel.provider == provider_to_db_value(provider),
         )
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -31,7 +34,7 @@ class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
         provider_user_id: str
     ) -> Optional[OAuthConnection]:
         stmt = select(OAuthConnectionModel).where(
-            OAuthConnectionModel.provider == provider,
+            OAuthConnectionModel.provider == provider_to_db_value(provider),
             OAuthConnectionModel.provider_user_id == provider_user_id,
         )
         result = await self.session.execute(stmt)

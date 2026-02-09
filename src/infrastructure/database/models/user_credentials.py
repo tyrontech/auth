@@ -46,7 +46,3 @@ class UserCredentialsModel(Base):
         onupdate=func.now(),
         nullable=False,
     )
-</think>
-Corrigiendo el modelo: `type_=String` era incorrecto para fechas.
-<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
-StrReplace

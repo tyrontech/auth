@@ -1,5 +1,6 @@
 """
 State store OAuth (CSRF) backed by Redis. Use when running multiple workers.
+Config (redis_url, key_prefix) comes from Settings via bootstrap.
 """
 import secrets
 
@@ -7,17 +8,16 @@ import redis
 
 from domain.ports.state_store import IStateStore
 
-KEY_PREFIX = "auth:oauth:state:"
-
 
 class RedisStateStore(IStateStore):
     """Almacén de state OAuth en Redis. TTL por clave; compartido entre workers."""
 
-    def __init__(self, redis_url: str) -> None:
+    def __init__(self, redis_url: str, key_prefix: str = "auth:oauth:state:") -> None:
         self._client = redis.Redis.from_url(redis_url, decode_responses=True)
+        self._key_prefix = key_prefix if key_prefix.endswith(":") else key_prefix + ":"
 
     def _key(self, state: str) -> str:
-        return f"{KEY_PREFIX}{state}"
+        return f"{self._key_prefix}{state}"
 
     def set(self, state: str, ttl_seconds: int = 600) -> None:
         key = self._key(state)

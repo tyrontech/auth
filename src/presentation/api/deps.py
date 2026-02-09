@@ -14,16 +14,12 @@ from domain.ports.oauth_provider import IOAuthProvider
 from domain.ports.refresh_token_repository import RefreshTokenRepository
 from domain.ports.state_store import IStateStore
 from domain.ports.token_service import ITokenService
-from domain.ports.user_credentials_repository import UserCredentialsRepository
 from domain.ports.user_repository import UserRepository
 from infrastructure.repositories.sqlalchemy_oauth_connection_repository import (
     SQLAlchemyOAuthConnectionRepository,
 )
 from infrastructure.repositories.sqlalchemy_refresh_token_repository import (
     SQLAlchemyRefreshTokenRepository,
-)
-from infrastructure.repositories.sqlalchemy_user_credentials_repository import (
-    SQLAlchemyUserCredentialsRepository,
 )
 from infrastructure.repositories.sqlalchemy_user_repository import (
     SQLAlchemyUserRepository,
@@ -75,12 +71,6 @@ def get_refresh_token_repository(
     session: AsyncSession = Depends(get_db),
 ) -> RefreshTokenRepository:
     return SQLAlchemyRefreshTokenRepository(session)
-
-
-def get_user_credentials_repository(
-    session: AsyncSession = Depends(get_db),
-) -> UserCredentialsRepository:
-    return SQLAlchemyUserCredentialsRepository(session)
 
 
 async def get_current_user(

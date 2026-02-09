@@ -27,17 +27,22 @@ app.add_middleware(
 
 # Rutas básicas
 from presentation.api.v1.endpoints import auth
-app.include_router(auth.router, tags=["Auth"])
+app.include_router(auth.router)
 
 @app.get("/health", tags=["System"])
 def health_check():
     return {"status": "ok", "env": settings.APP_ENV}
 
-# Entrypoint para desarrollo
+# Entrypoint: reload solo desde Settings, directorio de código explícito
 if __name__ == "__main__":
+    from pathlib import Path
+
+    _reload = settings.DEBUG
+    _reload_dirs = [str(Path(__file__).resolve().parent)] if _reload else None
     uvicorn.run(
-        "main:app", 
-        host="0.0.0.0", 
-        port=8000, 
-        reload=settings.DEBUG
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=_reload,
+        reload_dirs=_reload_dirs,
     )
