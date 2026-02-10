@@ -29,7 +29,9 @@ def login_google(
 async def callback_google(
     code: str = Query(..., description="Código de autorización devuelto por Google"),
     _state: str = Depends(deps.require_oauth_state),
-    use_case: AuthenticateWithGoogle = Depends(deps.get_authenticate_google_use_case),
+    use_case: AuthenticateWithGoogle = Depends(
+        deps.get_authenticate_google_use_case_dep
+    ),
     redirect_uri: str = Depends(deps.get_google_redirect_uri),
 ):
     """Recibe el callback de Google, crea/loguea usuario y devuelve tokens."""
@@ -40,7 +42,7 @@ async def callback_google(
 @router.post("/refresh", response_model=AuthResponse)
 async def refresh_tokens(
     body: RefreshRequest,
-    use_case: RefreshTokens = Depends(deps.get_refresh_tokens_use_case),
+    use_case: RefreshTokens = Depends(deps.get_refresh_tokens_use_case_dep),
 ):
     """Intercambia un refresh token válido por nuevos access y refresh tokens (rotation)."""
     try:

@@ -1,19 +1,69 @@
-import bootstrap
-
-bootstrap.init()
+import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+
+from container import ContainerManager
 from config.settings import get_settings
+from config.validation import validate_all_configuration, ConfigurationValidationError
+
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
-# Inicialización limpia
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Gestiona el ciclo de vida completo de la aplicación:
+    - Startup: Inicializa container y valida configuración
+    - Shutdown: Cierra recursos de forma ordenada
+    """
+    # Startup
+    logger.info("Starting application...")
+    try:
+        # Inicializar container
+        ContainerManager.initialize()
+        
+        # Obtener engine para validación de conexión
+        container = ContainerManager.get_instance()
+        engine = container.get_db_engine()
+        
+        # Validar configuración completa (DB, Redis, Settings)
+        logger.info("Validating configuration...")
+        await validate_all_configuration(settings=settings, engine=engine)
+        logger.info("✅ Application started successfully")
+    except ConfigurationValidationError as e:
+        logger.error(f"Configuration validation failed: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Failed to start application: {e}", exc_info=True)
+        raise
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down application...")
+    try:
+        await ContainerManager.shutdown()
+        logger.info("✅ Application shut down successfully")
+    except Exception as e:
+        logger.error(f"Error during application shutdown: {e}", exc_info=True)
+
+
+# Inicialización limpia con lifespan management
 app = FastAPI(
     title=settings.APP_NAME,
     docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None
+    redoc_url="/redoc" if settings.DEBUG else None,
+    lifespan=lifespan,
 )
 
 # Configuración de Middlewares

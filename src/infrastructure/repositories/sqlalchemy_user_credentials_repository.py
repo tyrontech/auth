@@ -1,16 +1,21 @@
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from domain.entities.user_credentials import UserCredentials
+from domain.ports.database_session import IDatabaseSession
 from domain.ports.user_credentials_repository import UserCredentialsRepository
 from infrastructure.database.models.user_credentials import UserCredentialsModel
 
 
 class SQLAlchemyUserCredentialsRepository(UserCredentialsRepository):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: IDatabaseSession):
+        """
+        Args:
+            session: Sesión de base de datos que implementa IDatabaseSession.
+                    En producción será SQLAlchemySessionAdapter wrappeando AsyncSession.
+        """
         self.session = session
 
     async def find_by_user_id(

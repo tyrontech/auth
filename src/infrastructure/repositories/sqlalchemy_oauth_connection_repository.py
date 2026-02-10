@@ -1,9 +1,9 @@
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from domain.entities.oauth_connection import OAuthConnection, OAuthProvider
+from domain.ports.database_session import IDatabaseSession
 from domain.ports.oauth_connection_repository import OAuthConnectionRepository
 from infrastructure.database.models.oauth_connection import (
     OAuthConnectionModel,
@@ -12,7 +12,12 @@ from infrastructure.database.models.oauth_connection import (
 
 
 class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: IDatabaseSession):
+        """
+        Args:
+            session: Sesión de base de datos que implementa IDatabaseSession.
+                    En producción será SQLAlchemySessionAdapter wrappeando AsyncSession.
+        """
         self.session = session
 
     async def find_by_user_and_provider(
@@ -79,7 +84,7 @@ class SQLAlchemyOAuthConnectionRepository(OAuthConnectionRepository):
     async def delete(self, connection_id: UUID) -> bool:
         model = await self._find_model(connection_id)
         if model:
-            await self.session.delete(model)
+            self.session.delete(model)
             await self.session.commit()
             return True
         return False

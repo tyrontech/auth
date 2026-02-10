@@ -3,16 +3,21 @@ from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy import and_, update
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from domain.entities.refresh_token import RefreshToken
+from domain.ports.database_session import IDatabaseSession
 from domain.ports.refresh_token_repository import RefreshTokenRepository
 from infrastructure.database.models.refresh_token import RefreshTokenModel
 
 
 class SQLAlchemyRefreshTokenRepository(RefreshTokenRepository):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: IDatabaseSession):
+        """
+        Args:
+            session: Sesión de base de datos que implementa IDatabaseSession.
+                    En producción será SQLAlchemySessionAdapter wrappeando AsyncSession.
+        """
         self.session = session
 
     async def find_by_token_hash(self, token_hash: str) -> Optional[RefreshToken]:

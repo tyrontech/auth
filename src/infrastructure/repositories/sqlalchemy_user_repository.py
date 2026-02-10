@@ -1,15 +1,20 @@
 from typing import Optional
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from domain.entities.user import User
+from domain.ports.database_session import IDatabaseSession
 from domain.ports.user_repository import UserRepository
 from infrastructure.database.models.user import UserModel
 
 
 class SQLAlchemyUserRepository(UserRepository):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: IDatabaseSession):
+        """
+        Args:
+            session: Sesión de base de datos que implementa IDatabaseSession.
+                    En producción será SQLAlchemySessionAdapter wrappeando AsyncSession.
+        """
         self.session = session
 
     async def find_by_id(self, user_id: UUID) -> Optional[User]:

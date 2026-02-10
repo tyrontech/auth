@@ -58,6 +58,8 @@ typing_extensions==4.15.0
 ujson==5.11.0
 urllib3==2.6.3
 uvicorn==0.40.0
-uvloop==0.22.1
+# uvloop es opcional y solo funciona en sistemas Unix/Linux (no Windows)
+# Mejora el rendimiento de uvicorn pero no es necesario para funcionar
+uvloop==0.22.1; sys_platform != "win32"
 watchfiles==1.1.1
 websockets==16.0

@@ -1,6 +1,6 @@
 """
 State store OAuth (CSRF) backed by Redis. Use when running multiple workers.
-Config (redis_url, key_prefix) comes from Settings via bootstrap.
+Config (redis_url, key_prefix) comes from Settings via container.
 """
 import secrets
 
