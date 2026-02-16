@@ -7,7 +7,12 @@ import uvicorn
 
 from container import ContainerManager
 from config.settings import get_settings
-from config.validation import validate_all_configuration, ConfigurationValidationError
+from config.validation import validate_settings, ConfigurationValidationError
+from infrastructure.health import (
+    ConnectivityValidationError,
+    validate_database_connection,
+    validate_redis_connection,
+)
 
 # Configurar logging
 logging.basicConfig(
@@ -29,19 +34,24 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting application...")
     try:
-        # Inicializar container
+        # 1) Validar Settings (config; sin infraestructura)
+        logger.info("Validating settings...")
+        validate_settings(settings)
+
+        # 2) Inicializar container (composition root)
         ContainerManager.initialize()
-        
-        # Obtener engine para validación de conexión
         container = ContainerManager.get_instance()
         engine = container.get_db_engine()
-        
-        # Validar configuración completa (DB, Redis, Settings)
-        logger.info("Validating configuration...")
-        await validate_all_configuration(settings=settings, engine=engine)
+
+        # 3) Validar conectividad a recursos (infrastructure.health)
+        logger.info("Validating connectivity...")
+        await validate_database_connection(engine)
+        if settings.STATE_STORE_BACKEND == "redis" and settings.REDIS_URL:
+            await validate_redis_connection(settings.REDIS_URL)
+
         logger.info("✅ Application started successfully")
-    except ConfigurationValidationError as e:
-        logger.error(f"Configuration validation failed: {e}")
+    except (ConfigurationValidationError, ConnectivityValidationError) as e:
+        logger.error("Startup validation failed: %s", e)
         raise
     except Exception as e:
         logger.error(f"Failed to start application: {e}", exc_info=True)
