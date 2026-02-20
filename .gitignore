@@ -5,7 +5,7 @@ venv
 __pycache__/
 *.pyc
 *.pyo
-*.pydS
+*.pyd
 
 # JWT keys (Ed25519)
 keys/
