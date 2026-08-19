@@ -9,3 +9,10 @@ __pycache__/
 
 # JWT keys (Ed25519)
 keys/
+
+# IDEs
+.vscode/
+.idea/
+.cursor/
+.cursorrules
+.cursorignore
